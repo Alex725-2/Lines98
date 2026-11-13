@@ -1,0 +1,28 @@
+<button type="button" class="board-cell @(IsSelected ? "selected" : "") @(IsReachable ? "reachable" : "")"
+        aria-label="@Label" aria-pressed="@(IsSelected ? "true" : "false")"
+        disabled="@Disabled" @onclick="() => OnSelect.InvokeAsync(Position)">
+    @if (Cell.Color is { } color)
+    {
+        <span @key="Revision" class="ball @BallAppearance.CssClass(color) @(IsNew ? "appearing" : "")" aria-hidden="true"></span>
+    }
+    @if (RemovedColor is { } removedColor)
+    {
+        <span @key="(-Revision)" class="ball disappearing @BallAppearance.CssClass(removedColor)" aria-hidden="true"></span>
+    }
+</button>
+
+@code {
+    [Parameter] public Position Position { get; set; }
+    [Parameter] public Cell Cell { get; set; }
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback<Position> OnSelect { get; set; }
+    [Parameter] public bool IsReachable { get; set; }
+    [Parameter] public bool IsNew { get; set; }
+    [Parameter] public int Revision { get; set; }
+    [Parameter] public BallColor? RemovedColor { get; set; }
+
+    private string Label => $"Строка {Position.Row + 1}, столбец {Position.Column + 1}: "
+        + (Cell.Color is { } color ? $"{BallAppearance.Name(color)} шарик" : "пусто")
+        + (IsSelected ? ", выбран" : "");
+}

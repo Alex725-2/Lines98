@@ -1,0 +1,51 @@
+# .NET build and test output
+[Bb]in/
+[Oo]bj/
+[Tt]est[Rr]esults/
+artifacts/
+*.trx
+*.coverage
+*.coveragexml
+
+# Visual Studio and local IDE settings
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.idea/
+.vscode/
+
+# Temporary files and local logs
+*.tmp
+*.temp
+*.bak
+*.orig
+*.swp
+*~
+*.log
+.DS_Store
+Thumbs.db
+
+# Local secrets and certificates
+.env
+.env.*
+!.env.example
+secrets.json
+appsettings.Local.json
+appsettings.*.Local.json
+*.pfx
+*.p12
+*.key
+*.pem
+
+# Local SDK, agent settings and session backups
+.dotnet-cli/
+.codex/
+.agents/
+.aws/
+CodexBackup/
+codex-backup*/
+Lines98-20*/
+rollout-*.jsonl
+*.jsonl.bak

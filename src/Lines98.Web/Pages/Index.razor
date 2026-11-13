@@ -1,0 +1,57 @@
+@page "/"
+@inject GameSession Session
+@inject BestScoreService BestScore
+<PageTitle>Lines98</PageTitle>
+
+<main class="game-shell">
+    <header class="game-header">
+        <div><p class="eyebrow">КЛАССИКА В НОВОМ ЦВЕТЕ</p><h1>Lines<span>98</span></h1></div>
+        <button class="new-game" type="button" @onclick="Session.NewGame">Новая игра</button>
+    </header>
+    <section class="game-layout" aria-label="Игра Lines98">
+        <div class="board-panel">
+            <GameBoard Board="Session.State.Board" SelectedPosition="Session.SelectedPosition"
+                       ReachablePositions="Session.ReachablePositions"
+                       Disabled="Session.State.IsGameOver" OnSelect="SelectCellAsync" />
+        </div>
+        <aside class="game-panel" aria-label="Состояние игры">
+            <div class="stat"><h2>Ваш счёт</h2><p class="score">@Session.State.Score</p></div>
+            <div class="stat"><h2>Лучший счёт</h2><p class="score">@BestScore.BestScore</p></div>
+            <div class="stat"><h2>Следующие шарики</h2>
+                <ol class="preview">
+                    @foreach (var color in Session.State.NextColors)
+                    {
+                        <li><span class="ball @BallAppearance.CssClass(color)" role="img"
+                                  aria-label="@BallAppearance.Name(color)" title="@BallAppearance.Name(color)"></span></li>
+                    }
+                </ol>
+            </div>
+            <div class="status" role="status" aria-live="polite" aria-atomic="true">
+                @if (Session.State.IsGameOver) { <h2>Игра окончена</h2> }
+                <p>@Session.Message</p>
+            </div>
+            <div class="rules"><h2>Как играть</h2>
+                <p>Соберите 5 или больше шариков одного цвета в ряд: по горизонтали, вертикали или диагонали.</p>
+                <p>Выберите шарик и пустую клетку. Для перемещения нужен свободный путь. Если линия не собрана, появятся ещё 3 шарика.</p>
+                <p>Каждый удалённый шарик — 1 очко.</p>
+            </div>
+        </aside>
+    </section>
+    <footer>Не спешите. Каждый ход имеет значение.</footer>
+</main>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await BestScore.InitializeAsync();
+        await BestScore.UpdateAsync(Session.State.Score);
+        StateHasChanged();
+    }
+
+    private async Task SelectCellAsync(Position position)
+    {
+        Session.SelectCell(position);
+        await BestScore.UpdateAsync(Session.State.Score);
+    }
+}

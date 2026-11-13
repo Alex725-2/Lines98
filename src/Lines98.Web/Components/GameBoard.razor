@@ -1,0 +1,53 @@
+@using CoreBoard = Lines98.Core.Board.Board
+
+<div class="game-board" role="group" aria-label="Игровое поле 9 на 9">
+    @for (var row = 0; row < CoreBoard.Size; row++)
+    {
+        @for (var column = 0; column < CoreBoard.Size; column++)
+        {
+            var position = new Position(row, column);
+            <BoardCell @key="position" Position="position" Cell="Board.GetCell(position)"
+                       IsSelected="@(SelectedPosition == position)" IsReachable="@(ReachablePositions?.Contains(position) == true)"
+                       Revision="revision" RemovedColor="@(removed.GetValueOrDefault(position))"
+                       IsNew="@(appeared.Contains(position))" Disabled="Disabled" OnSelect="OnSelect" />
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public CoreBoard Board { get; set; } = default!;
+    [Parameter] public Position? SelectedPosition { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback<Position> OnSelect { get; set; }
+    [Parameter] public IReadOnlySet<Position>? ReachablePositions { get; set; }
+
+    private CoreBoard? previousBoard;
+    private Position? previousSelection;
+    private int revision;
+    private readonly Dictionary<Position, BallColor?> removed = new();
+    private readonly HashSet<Position> appeared = new();
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(previousBoard, Board))
+        {
+            revision++;
+            removed.Clear();
+            appeared.Clear();
+            for (var row = 0; row < CoreBoard.Size; row++)
+            {
+                for (var column = 0; column < CoreBoard.Size; column++)
+                {
+                    var position = new Position(row, column);
+                    var before = previousBoard?.GetCell(position).Color;
+                    var after = Board.GetCell(position).Color;
+                    if (after is not null && before != after) appeared.Add(position);
+                    if (before is not null && before != after && position != previousSelection)
+                        removed[position] = before;
+                }
+            }
+            previousBoard = Board;
+        }
+        previousSelection = SelectedPosition;
+    }
+}
