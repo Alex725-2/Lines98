@@ -1,0 +1,63 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+          # Also install the exact SDK required by global.json (rollForward is disabled).
+          global-json-file: global.json
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Restore
+        run: dotnet restore Lines98.sln
+
+      - name: Test
+        run: dotnet test Lines98.sln --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish src/Lines98.Web/Lines98.Web.csproj --configuration Release --no-restore --output artifacts/publish
+
+      - name: Set GitHub Pages base path
+        run: |
+          sed -i 's|<base href="/" />|<base href="/Lines98/" />|' artifacts/publish/wwwroot/index.html
+          grep -Fq '<base href="/Lines98/" />' artifacts/publish/wwwroot/index.html
+          test -f artifacts/publish/wwwroot/_framework/blazor.webassembly.js
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: artifacts/publish/wwwroot
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
